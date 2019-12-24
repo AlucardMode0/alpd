@@ -26,12 +26,25 @@ int main (int argc , char **argv)
 		Dictionary *d=(Dictionary*)malloc (1);
 		d=dict_new();
 		int *finished=(int *)malloc(total * sizeof(int));
+		int *transmit=(int *)malloc(np * sizeof(int));
 		for(j=0;j<argc;++j)
-			finished[j]=0;
+			{
+			finished[j]=-1;
+			transmit[j]=0;
+		}
+		for(j=1;j<argc;++j)
+		{
+			
+			transmit[j%np>0?j%np:1]++;
+		}
+		for(int i=0;i<=np;++i)
+		printf("%d nigga",transmit[i]);
 		printf("am facut pana la alocare vector\n");
-		for( i=1;i<argc;++i)
+		for( i=1;i<np;++i)
 		{printf("trimit la proc %d , %s\n",i%np>0?i%np:1,argv[i]);
+			MPI_Send(&transmit[i],1,MPI_INT,i,0,MPI_COMM_WORLD);
 			MPI_Send(argv[i],100,MPI_CHAR,(i%np>0)?(i%np):(1),0,MPI_COMM_WORLD);
+			finished[i]=0;
 		printf("AICI\n");}
 		 while(ok)
 		 {
@@ -47,12 +60,15 @@ int main (int argc , char **argv)
 				finished[status.MPI_TAG]=1;
 				for(j=1;j<argc;j++)
 					{printf("%d ",finished[j]);
-					if (finished[j]==0)
+					if (finished[j]==-1)
 						{ok=1;
 						
 						MPI_Send(argv[j],100,MPI_CHAR,(j%np>0)?(j%np):(1),0,MPI_COMM_WORLD);
+						finished[j]=0;
 						break;}
-					
+					if (finished[j]==0)
+						{ok=1;
+						break;}
 					ok=0;
 					}
 					
@@ -69,7 +85,8 @@ int main (int argc , char **argv)
 	}
 		
 	else
-	{	if(np>argc)
+	{	int Alint_aroma=0;
+		if(np>argc)
 			if (rank>=argc)
 			{MPI_Finalize();
 			return 0;
@@ -77,11 +94,8 @@ int main (int argc , char **argv)
 		int x=1;
 		int f1=1,fm=argc/(np-1),f;
 		printf("am inceput receive pe proc %d\n",rank);
-		if (np<argc)
-			f=fm;
-		else
-			f=f1;
-		for(x=1;x<=f;++x)
+		MPI_Recv(&Alint_aroma,1,MPI_INT,0,0,MPI_COMM_WORLD,&status);
+		for(x=1;x<=Alint_aroma;++x)
 		{MPI_Recv(received_word,100,MPI_CHAR,0,0,MPI_COMM_WORLD,&status);
 		printf("%s\n",received_word);
 		for (i=1;i<argc;++i)
@@ -98,7 +112,7 @@ int main (int argc , char **argv)
 				  {
 					if(pch[1]>32)
 					MPI_Send(pch,100,MPI_CHAR,0,i,MPI_COMM_WORLD);
-					pch = strtok (NULL, " ,.-");
+					pch = strtok (NULL, " ,.-\"\'[](){}!?//@#$%^&*(-_=+");
 				  }
 				//MPI_Send(&buf,100,MPI_CHAR,0,i,MPI_COMM_WORLD);
 			}
