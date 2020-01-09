@@ -19,12 +19,12 @@ int main (int argc , char **argv)
 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 	MPI_Status status;
 	int i=0;
+	
 	if(rank==0)
-	{
+	{	system("mkdir Dictionary");
 		int j;
 		int ok=1;
-		Dictionary *d=(Dictionary*)malloc (1);
-		d=dict_new();
+		
 		int *finished=(int *)malloc(total * sizeof(int));
 		int *transmit=(int *)malloc(np * sizeof(int));
 		for(j=0;j<argc;++j)
@@ -51,8 +51,8 @@ int main (int argc , char **argv)
 			// printf("am inceput receive pe proc 0\n");
 			MPI_Recv(received_word,100,MPI_CHAR,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,&status);
 			if(strcmp(received_word,end)!=0)
-			{dict_add(d,received_word,(int)status.MPI_TAG);
-			//dict_print(d);
+			{//dict_add(d,received_word,(int)status.MPI_TAG);
+				
 			}
 			else{
 				printf("am terminat odata");
@@ -76,19 +76,41 @@ int main (int argc , char **argv)
 		 }
 		 
 			 
-		 printf("dictionaru final:\n");
-			dict_print(d);
-		dict_free(d);
-		free(d);
+		 //printf("dictionaru final:\n");
+			//dict_print(d);
+		
 		for(int i=0;i<=argc;++i)
 		printf("%d ",finished[i]);
-	}
 		
+		
+		FILE *fp;
+	  char var[40];
+	  
+	  fp = popen("cd Dictionary && ls  -R -v $(ls -r) >../REZULTAT.txt", "r");
+	  while (fgets(var, sizeof(var), fp) != NULL) 
+		{
+		  printf("%s", var);
+		}
+	  pclose(fp);
+
+	  
+	  
+	char command[256];
+	snprintf(command, sizeof command, "rm -R -- */");
+	system(command);
+	}
 	else
-	{	int Alint_aroma=0;
+	{	//Dictionary *d=(Dictionary*)malloc (1);
+		//d=dict_new();
+		char command[256];
+		
+		int Alint_aroma=0;
 		if(np>argc)
 			if (rank>=argc)
-			{MPI_Finalize();
+			{
+			//dict_free(d);
+			//free(d);
+			MPI_Finalize();
 			return 0;
 			}
 		int x=1;
@@ -96,29 +118,34 @@ int main (int argc , char **argv)
 		printf("am inceput receive pe proc %d\n",rank);
 		MPI_Recv(&Alint_aroma,1,MPI_INT,0,0,MPI_COMM_WORLD,&status);
 		for(x=1;x<=Alint_aroma;++x)
-		{MPI_Recv(received_word,100,MPI_CHAR,0,0,MPI_COMM_WORLD,&status);
-		printf("%s\n",received_word);
-		for (i=1;i<argc;++i)
-			{if(strcmp(received_word,argv[i])==0)
-				break;
+			{MPI_Recv(received_word,100,MPI_CHAR,0,0,MPI_COMM_WORLD,&status);
+			printf("%s\n",received_word);
+			for (i=1;i<argc;++i)
+				{if(strcmp(received_word,argv[i])==0)
+					break;
+				}
+				char *pch;
+				FILE *fp = fopen(received_word,"r");
+				char buf[100];
+				while( fscanf(fp, "%s", buf) != EOF )
+				{
+					pch = strtok (buf," ,.-\"\'[](){}!?//@#$%^&*(-_=+");
+					  while (pch != NULL)
+					  {
+						if(pch[1]>32)
+						//MPI_Send(pch,100,MPI_CHAR,0,i,MPI_COMM_WORLD);
+						snprintf(command, sizeof command, "mkdir Dictionary/%s 2> /dev/null;touch Dictionary/%s/%s_%d 2> /dev/null",pch, pch,argv[i],rank);
+						system(command);
+						pch = strtok (NULL, " ,.-\"\'[](){}!?//@#$%^&*(-_=+");
+					  }
+					//MPI_Send(&buf,100,MPI_CHAR,0,i,MPI_COMM_WORLD);
+				}
+				printf("trimit end de la %d\n",i);
+				MPI_Send(end,100,MPI_CHAR,0,i,MPI_COMM_WORLD);
+				
 			}
-			char *pch;
-			FILE *fp = fopen(received_word,"r");
-			char buf[100];
-			while( fscanf(fp, "%s", buf) != EOF )
-			{
-				pch = strtok (buf," ,.-\"\'[](){}!?//@#$%^&*(-_=+");
-				  while (pch != NULL)
-				  {
-					if(pch[1]>32)
-					MPI_Send(pch,100,MPI_CHAR,0,i,MPI_COMM_WORLD);
-					pch = strtok (NULL, " ,.-\"\'[](){}!?//@#$%^&*(-_=+");
-				  }
-				//MPI_Send(&buf,100,MPI_CHAR,0,i,MPI_COMM_WORLD);
-			}
-			printf("trimit end de la %d\n",i);
-			MPI_Send(end,100,MPI_CHAR,0,i,MPI_COMM_WORLD);
-		}
+		//dict_free(d);
+		//free(d);
 	}
 	
 	
@@ -171,5 +198,4 @@ Dictionary *d=(Dictionary*)malloc (1);
 d=dict_new();
 dict_free(d);
 free(d);
-
 */
