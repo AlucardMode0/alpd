@@ -12,26 +12,23 @@ Dictionary* dict_new() {
     return dictionary;
 }
 
-void dict_add(Dictionary *dictionary, const char *key, int value) {
+void dict_add(Dictionary *dictionary, char *key) {
     int ok=1;
 	int i =0;
+	for(int i = 0; key[i]; i++){
+		key[i] = tolower(key[i]);
+	}
 	if(dict_has(dictionary, key))
 		while(dictionary != NULL)
 			{
-			if(strcmp(dictionary->head->key, key) == 0)
-			{for(i=0;i<dictionary->head->counter;++i)
-						if (dictionary->head->value[i]==value)
-						{ok=0;
-						break;}
-				if (ok==1)
-				{dictionary->head->counter++;
-				//printf("%s the supli\n ",key);
-				//printf("%d\n",dictionary->head->counter);
-				dictionary->head->value[dictionary->head->counter-1] = value;
-				break;}
+				if(strcmp(dictionary->head->key, key) == 0)
+				{
+					dictionary->head->value++;
+				}
+				dictionary = dictionary->tail;
 			}
-			dictionary = dictionary->tail;
-			}
+			
+			
 	else{
 		if (dictionary->head != NULL) {
 			while(dictionary->tail != NULL) {
@@ -45,12 +42,10 @@ void dict_add(Dictionary *dictionary, const char *key, int value) {
 		dictionary->head = (KVPair*)malloc(sizeof(KVPair));
 		assert(dictionary->head != NULL);
 		dictionary->head->key = (char *)malloc(key_length * sizeof(char));
-		dictionary->head->value = (int *)malloc(total * sizeof(int));
 		assert(dictionary->head->key != NULL);
 		strcpy(dictionary->head->key, key);
 		//printf("%s normal key\n ",key);
-		dictionary->head->counter=1;
-		dictionary->head->value[0] = value;
+		dictionary->head->value = 1;
 	}
 }
 
@@ -82,9 +77,22 @@ void dict_print_key(Dictionary *dictionary, const char *key)
 	int i ;
     while(dictionary != NULL) {
         	if(strcmp(dictionary->head->key, key) == 0)
-			{for(i=0;i<dictionary->head->counter;++i)
-					printf("%d ",dictionary->head->value[i]);
+			{
+					printf("%d ",dictionary->head->value);
 				break;}
+        dictionary = dictionary->tail;
+    }
+    
+}
+
+void dict_to_dirs(Dictionary *dictionary,char *file) 
+{
+	
+	char command[256];
+	int i ;
+    while(dictionary != NULL) {
+				snprintf(command, sizeof command, "mkdir Dictionary/%s 2> /dev/null;touch Dictionary/%s/%s_%d 2> /dev/null",dictionary->head->key, dictionary->head->key,file,dictionary->head->value);
+				system(command);	
         dictionary = dictionary->tail;
     }
     
@@ -95,8 +103,7 @@ void dict_print(Dictionary *dictionary)
 	int i ;
     while(dictionary != NULL) {
 		printf("%s:",dictionary->head->key);
-			for(i=0;i<dictionary->head->counter;++i)
-					printf("%d ",dictionary->head->value[i]);
+			printf("%d ",dictionary->head->value);
 		printf("\n");
         dictionary = dictionary->tail;
     }
@@ -137,7 +144,6 @@ void dict_free(Dictionary *dictionary) {
     if(dictionary == NULL)
         return;
     free(dictionary->head->key);
-	free(dictionary->head->value);	
     free(dictionary->head);
     Dictionary *tail = dictionary->tail;
     free(dictionary);
