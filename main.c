@@ -100,16 +100,16 @@ int main (int argc , char **argv)
 	system(command);
 	}
 	else
-	{	//Dictionary *d=(Dictionary*)malloc (1);
-		//d=dict_new();
+	{	Dictionary *d=(Dictionary*)malloc (1);
+		d=dict_new();
 		char command[256];
 		
 		int Alint_aroma=0;
 		if(np>argc)
 			if (rank>=argc)
 			{
-			//dict_free(d);
-			//free(d);
+			dict_free(d);
+			free(d);
 			MPI_Finalize();
 			return 0;
 			}
@@ -133,19 +133,21 @@ int main (int argc , char **argv)
 					  while (pch != NULL)
 					  {
 						if(pch[1]>32)
-						//MPI_Send(pch,100,MPI_CHAR,0,i,MPI_COMM_WORLD);
-						snprintf(command, sizeof command, "mkdir Dictionary/%s 2> /dev/null;touch Dictionary/%s/%s_%d 2> /dev/null",pch, pch,argv[i],rank);
-						system(command);
+							dict_add(d,pch);
+						//snprintf(command, sizeof command, "mkdir Dictionary/%s 2> /dev/null;touch Dictionary/%s/%s_%d 2> /dev/null",pch, pch,argv[i],rank);
+						//system(command);
 						pch = strtok (NULL, " ,.-\"\'[](){}!?//@#$%^&*(-_=+");
 					  }
 					//MPI_Send(&buf,100,MPI_CHAR,0,i,MPI_COMM_WORLD);
 				}
 				printf("trimit end de la %d\n",i);
+				dict_to_dirs(d,argv[i]);
 				MPI_Send(end,100,MPI_CHAR,0,i,MPI_COMM_WORLD);
+				//dict_print(d);
 				
 			}
-		//dict_free(d);
-		//free(d);
+		dict_free(d);
+		free(d);
 	}
 	
 	
