@@ -91,8 +91,8 @@ void dict_to_dirs(Dictionary *dictionary,char *file)
 	char command[256];
 	int i ;
     while(dictionary != NULL) {
-				snprintf(command, sizeof command, "mkdir Dictionary/%s 2> /dev/null;touch Dictionary/%s/%s_%d 2> /dev/null",dictionary->head->key, dictionary->head->key,file,dictionary->head->value);
-				system(command);	
+				snprintf(command, sizeof command, "mkdir Dictionary/%c 2> /dev/null;mkdir Dictionary/%c/%s 2> /dev/null;touch Dictionary/%c/%s/%s_%d 2> /dev/null",dictionary->head->key[0],dictionary->head->key[0],dictionary->head->key, dictionary->head->key[0],dictionary->head->key,file,dictionary->head->value);
+				system(command);		
         dictionary = dictionary->tail;
     }
     
